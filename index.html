@@ -10,101 +10,165 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f5f5f5;
-        }
-
-        nav {
-            background: #222;
-            padding: 15px;
             text-align: center;
+            margin-top: 80px;
+            background: #f4f6f8;
         }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 20px;
+        h1 {
+            color: #2b6cb0;
+            font-size: 40px;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 100px auto;
-            background: white;
-            padding: 40px;
-            text-align: center;
-            border-radius: 10px;
+        p {
+            font-size: 20px;
+        }
+
+        form {
+            margin-top: 30px;
         }
 
         input {
-            width: 70%;
-            padding: 12px;
-            margin: 10px;
+            padding: 14px;
+            width: 350px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
         }
 
         button {
-            padding: 12px 25px;
+            padding: 14px 25px;
+            background-color: dodgerblue;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 18px;
         }
 
-        #message {
+        button:hover {
+            background-color: royalblue;
+        }
+
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        #form-message {
             margin-top: 20px;
             font-weight: bold;
+            font-size: 20px;
         }
     </style>
 </head>
 
 <body>
 
-    <nav>
-        <a href="#">About</a>
-        <a href="#">Articles</a>
-        <a href="#">Tutorials</a>
-        <a href="#">Contact</a>
-    </nav>
+    <h1>DEV@Deakin</h1>
 
-    <div class="container">
+    <p>Sign up for our newsletter</p>
 
-        <h1>DEV@Deakin</h1>
+    <form id="signup-form">
 
-        <h2>Subscribe to our Newsletter</h2>
+        <!-- Name -->
+        <input
+            type="text"
+            id="name"
+            placeholder="Enter your name"
+            required
+        >
 
-        <p>
-            Enter your email address to receive the latest
-            DEV@Deakin updates.
-        </p>
+        <br>
 
-        <form id="subscribeForm">
+        <!-- Email -->
+        <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+        >
 
-            <input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                required
-            >
+        <br>
 
-            <button type="submit">
-                Subscribe
-            </button>
+        <button type="submit" id="submit-btn">
+            Subscribe
+        </button>
 
-        </form>
+    </form>
 
-        <p id="message"></p>
+    <p id="form-message"></p>
 
-    </div>
 
+    <!-- JavaScript -->
     <script>
-        const form = document.getElementById("subscribeForm");
-        const message = document.getElementById("message");
 
-        form.addEventListener("submit", async function(event) {
+        const form = document.getElementById("signup-form");
 
+        const nameInput = document.getElementById("name");
+
+        const emailInput = document.getElementById("email");
+
+        const messageEl =
+            document.getElementById("form-message");
+
+        const submitBtn =
+            document.getElementById("submit-btn");
+
+
+        form.addEventListener("submit", async function (event) {
+
+            // Prevent page refresh
             event.preventDefault();
 
-            const email = document.getElementById("email").value;
+
+            // Get values
+            const name = nameInput.value.trim();
+
+            const email = emailInput.value.trim();
+
+
+            // Clear old message
+            messageEl.textContent = "";
+
+
+            // Check name
+            if (!name) {
+
+                messageEl.textContent =
+                    "Please enter your name.";
+
+                messageEl.style.color = "red";
+
+                return;
+            }
+
+
+            // Check email
+            if (!email) {
+
+                messageEl.textContent =
+                    "Please enter your email.";
+
+                messageEl.style.color = "red";
+
+                return;
+            }
+
+
+            // Disable button
+            submitBtn.disabled = true;
+
+            submitBtn.textContent = "Sending...";
+
 
             try {
 
+                // Send name and email to server
                 const response = await fetch("/subscribe", {
+
                     method: "POST",
 
                     headers: {
@@ -112,26 +176,72 @@
                     },
 
                     body: JSON.stringify({
+                        name: name,
                         email: email
                     })
+
                 });
 
+
+                // Get response
                 const data = await response.json();
 
-                message.textContent = data.message;
 
+                console.log("Response:", data);
+
+
+                // Success
                 if (response.ok) {
+
+                    messageEl.textContent =
+                        "Welcome " + name +
+                        "! Email sent successfully.";
+
+                    messageEl.style.color = "green";
+
+
+                    // Clear form
                     form.reset();
+
                 }
 
-            } catch (error) {
+                // Error
+                else {
 
-                console.error(error);
+                    messageEl.textContent =
+                        data.message ||
+                        "Failed to send email.";
 
-                message.textContent =
-                    "Something went wrong. Please try again.";
+                    messageEl.style.color = "red";
+
+                }
+
+
             }
+
+            catch (error) {
+
+                console.error("Error:", error);
+
+                messageEl.textContent =
+                    "Could not connect to the server.";
+
+                messageEl.style.color = "red";
+
+            }
+
+
+            finally {
+
+                // Enable button again
+                submitBtn.disabled = false;
+
+                submitBtn.textContent = "Subscribe";
+
+            }
+
         });
+
     </script>
 
 </body>
