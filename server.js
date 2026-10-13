@@ -1,49 +1,79 @@
+
+require("dotenv").config();
+
 const express = require("express");
+const sgMail = require("@sendgrid/mail");
+const path = require("path");
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+if (!process.env.API_KEY || !process.env.FROM_EMAIL) {
+    console.error("Missing API_KEY or FROM_EMAIL in .env");
+    process.exit(1);
+}
 
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/index.html");
-});
+sgMail.setApiKey(process.env.API_KEY);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
+
+const subscribers = [];
 
 app.post("/subscribe", async (req, res) => {
+    const name = String(req.body.name || "").trim();
+    const email = String(req.body.email || "").trim().toLowerCase();
 
-    const email = req.body.email;
-
-    console.log("Received email:", email);
-
-    // Check whether email was entered
-    if (!email) {
+    if (!name || !email) {
         return res.status(400).json({
-            message: "Email is required"
+            message: "Please enter your name and email."
         });
     }
 
-    // Check basic email format
-    if (!email.includes("@")) {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailPattern.test(email)) {
         return res.status(400).json({
-            message: "Please enter a valid email"
+            message: "Please enter a valid email address."
         });
     }
 
-    /*
-      TODO:
-      Add your chosen Email API request here.
+    const alreadySubscribed = subscribers.some(
+        subscriber => subscriber.email === email
+    );
 
-      The API should:
-      1. Receive the subscriber's email.
-      2. Send the welcome email.
-      3. Return a 200 or 202 response.
-    */
+    if (alreadySubscribed) {
+        return res.status(409).json({
+            message: "This email is already subscribed."
+        });
+    }
 
-    console.log("Subscriber accepted");
+    const message = {
+        to: email,
+        from: process.env.FROM_EMAIL,
+        subject: "Newsletter Subscription Confirmation",
+        text: `Hello ${name}, thank you for subscribing to our newsletter!`
+    };
 
-    res.status(202).json({
-        message: "Subscription successful!"
-    });
+    try {
+        await sgMail.send(message);
+
+        subscribers.push({ name, email });
+
+        return res.status(202).json({
+            message: "Subscription accepted successfully!"
+        });
+    } catch (error) {
+        console.error(
+            "SendGrid error:",
+            error.response?.body || error.message
+        );
+
+        return res.status(500).json({
+            message: "Unable to process your subscription right now."
+        });
+    }
 });
 
 app.listen(PORT, () => {
