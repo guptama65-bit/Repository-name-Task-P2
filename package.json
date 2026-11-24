@@ -1,22 +1,13 @@
 {
-  "name": "task-2-html",
+  "name": "devdeakin-welcome-email",
   "version": "1.0.0",
-  "description": "",
+  "description": "DEV@Deakin newsletter page that sends a welcome email with the Brevo API",
   "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
-    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "form-data": "^4.0.6",
-    "mailgun.js": "^14.0.0"
+    "express": "^5.1.0"
   }
 }

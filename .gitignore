@@ -1,10 +1,5 @@
-
-node_modules/
 .env
-code.env
 .env.*
 !.env.example
-.env
-.env.*
 node_modules/
 dist/
